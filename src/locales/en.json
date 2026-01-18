@@ -1,0 +1,83 @@
+{
+  "app": {
+    "name": "Gemini App"
+  },
+  "titlebar": {
+    "back": "Back",
+    "forward": "Forward",
+    "refresh": "Refresh",
+    "switchToAIStudio": "Switch to AI Studio",
+    "switchToGemini": "Switch to Gemini",
+    "settings": "Settings",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
+  },
+  "loading": {
+    "switchingToGemini": "Switching to Gemini App...",
+    "switchingToAIStudio": "Switching to AI Studio..."
+  },
+  "settings": {
+    "title": "Settings",
+    "shortcut": {
+      "label": "Hotkey",
+      "placeholder": "Press a key",
+      "recording": "Recording...",
+      "change": "Change",
+      "default": "Default: Shift+Z",
+      "resetTitle": "Reset to default (Shift+Z)"
+    },
+    "language": {
+      "label": "Language",
+      "description": "App interface language",
+      "auto": "System Default",
+      "en": "English",
+      "ko": "한국어"
+    },
+    "alwaysOnTop": "Always on top",
+    "startWithWindows": "Start with Windows",
+    "appData": {
+      "label": "App Data",
+      "clearCache": "Clear Cache",
+      "clearing": "Clearing..."
+    },
+    "resetSettings": {
+      "label": "Reset Settings",
+      "resetAll": "Reset all settings to default"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  },
+  "dialogs": {
+    "clearCache": {
+      "title": "Clear Cache",
+      "message": "Are you sure you want to clear the cache?<br><br>This will delete all app data including login information.<br>Your Gemini and AI Studio history is automatically saved on the web.",
+      "confirm": "Clear"
+    },
+    "resetAll": {
+      "title": "Reset All Settings",
+      "message": "Are you sure you want to reset all settings to default?<br><br>• Hotkey: Shift+Z<br>• Language: System Default<br>• Always on top: On<br>• Start with Windows: On",
+      "confirm": "Reset"
+    },
+    "unsavedChanges": {
+      "title": "Unsaved Changes",
+      "message": "You have unsaved changes.<br>Close without saving?",
+      "discard": "Discard",
+      "save": "Save"
+    },
+    "languageChange": {
+      "title": "Restart Required",
+      "message": "The app needs to restart to apply the language change.",
+      "restart": "Restart Now",
+      "cancel": "Cancel"
+    }
+  },
+  "tray": {
+    "show": "Show",
+    "hide": "Hide",
+    "settings": "Settings",
+    "quit": "Quit"
+  }
+}

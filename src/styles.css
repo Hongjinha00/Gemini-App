@@ -1,0 +1,393 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --titlebar-height: 32px;
+}
+
+/* 다크 테마 (기본값, AI Studio용) */
+.titlebar {
+  --bg-color: #1e1f20;
+  --surface-color: #1e1f20;
+  --border-color: #3c4043;
+  --text-color: #e3e3e3;
+  --text-secondary: #9aa0a6;
+  --accent-color: #8ab4f8;
+  --accent-hover: #aecbfa;
+  --danger-color: #f28b82;
+}
+
+/* 라이트 테마 (Gemini 라이트 모드용) */
+.titlebar.light-theme {
+  --bg-color: #f8f9fa;
+  --surface-color: #ffffff;
+  --border-color: #e0e0e0;
+  --text-color: #202124;
+  --text-secondary: #5f6368;
+  --accent-color: #1a73e8;
+  --accent-hover: #1967d2;
+  --danger-color: #d93025;
+}
+
+body {
+  --bg-color: #1e1f20;
+}
+
+html, body {
+  height: var(--titlebar-height);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* 타이틀바 */
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: var(--titlebar-height);
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+  user-select: none;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 8px;
+}
+
+.titlebar-drag {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: center;
+}
+
+.titlebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: var(--titlebar-height);
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background 0.15s, color 0.3s;
+  outline: none;
+}
+
+.titlebar-btn:focus {
+  outline: none;
+}
+
+.titlebar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn {
+  width: 32px;
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.nav-btn:disabled:hover {
+  background: transparent;
+}
+
+.window-btn {
+  width: 46px;
+}
+
+.close-btn:hover {
+  background: var(--danger-color);
+}
+
+/* 모드 전환 버튼 */
+.mode-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  margin-left: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mode-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mode-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 웹뷰 컨테이너 */
+.webview-container {
+  position: relative;
+  height: calc(100% - var(--titlebar-height));
+  background: #131314;
+}
+
+#webview {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+#webview.loading {
+  opacity: 0;
+}
+
+/* 로딩 오버레이 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #131314;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 10;
+}
+
+.loading-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(138, 180, 248, 0.2);
+  border-top-color: #8ab4f8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  color: #e3e3e3;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 모달 */
+.modal-overlay {
+  position: fixed;
+  top: var(--titlebar-height);
+  left: 0;
+  right: 0;
+  bottom: calc(-100vh + var(--titlebar-height));
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal {
+  background: #202124;
+  border-radius: 12px;
+  width: 380px;
+  max-width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.288);
+  border: 1px solid #3c4043;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #3c4043;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e3e3e3;
+}
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: #9aa0a6;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e3e3e3;
+}
+
+.modal-content {
+  padding: 20px;
+  background: #202124;
+}
+
+.setting-item {
+  margin-bottom: 20px;
+}
+
+.setting-item:last-child {
+  margin-bottom: 0;
+}
+
+.setting-item > label {
+  display: block;
+  font-size: 14px;
+  color: #e3e3e3;
+  margin-bottom: 4px;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #e3e3e3;
+}
+
+.setting-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #8ab4f8;
+}
+
+.setting-item small {
+  display: block;
+  margin-top: 6px;
+  color: #9aa0a6;
+  font-size: 12px;
+}
+
+.shortcut-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.shortcut-input-wrapper input {
+  flex: 1;
+  padding: 10px 12px;
+  background: #303134;
+  border: 1px solid #3c4043;
+  border-radius: 6px;
+  color: #e3e3e3;
+  font-size: 14px;
+  outline: none;
+}
+
+.shortcut-input-wrapper input:focus {
+  border-color: #8ab4f8;
+}
+
+.shortcut-input-wrapper input.recording {
+  border-color: #8ab4f8;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.shortcut-record-btn {
+  padding: 10px 16px;
+  background: #303134;
+  border: 1px solid #3c4043;
+  border-radius: 6px;
+  color: #e3e3e3;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.shortcut-record-btn:hover {
+  background: #3c4043;
+}
+
+.shortcut-record-btn.recording {
+  background: #8ab4f8;
+  border-color: #8ab4f8;
+  color: #202124;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #3c4043;
+  display: flex;
+  justify-content: flex-end;
+  background: #202124;
+}
+
+.btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: #8ab4f8;
+  color: #202124;
+}
+
+.btn-primary:hover {
+  background: #aecbfa;
+}

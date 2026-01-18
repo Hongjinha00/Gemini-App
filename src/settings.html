@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    *:focus {
+      outline: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: rgba(0, 0, 0, 0.85);
+      color: #e3e3e3;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: #202124;
+      border-radius: 12px;
+      width: 380px;
+      max-width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid #3c4043;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid #3c4043;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e3e3e3;
+    }
+
+    .modal-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      color: #9aa0a6;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e3e3e3;
+    }
+
+    .modal-content {
+      padding: 16px 20px;
+    }
+
+    .setting-item {
+      margin-bottom: 16px;
+    }
+
+    .setting-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-item > label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #e3e3e3;
+      margin-bottom: 8px;
+    }
+
+    .setting-item small {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #9aa0a6;
+    }
+
+    .shortcut-input-wrapper {
+      display: flex;
+      gap: 8px;
+    }
+
+    #shortcut-input {
+      flex: 1;
+      padding: 10px 12px;
+      background: #303134;
+      border: 1px solid #3c4043;
+      border-radius: 6px;
+      color: #e3e3e3;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #shortcut-input:focus {
+      border-color: #8ab4f8;
+    }
+
+    #shortcut-input.recording {
+      border-color: #8ab4f8;
+      background: #394456;
+    }
+
+    .shortcut-record-btn {
+      padding: 10px 16px;
+      background: #303134;
+      border: 1px solid #3c4043;
+      border-radius: 6px;
+      color: #8ab4f8;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      outline: none;
+    }
+
+    .shortcut-record-btn:hover {
+      background: #3c4043;
+    }
+
+    .shortcut-record-btn.recording {
+      background: #394456;
+      border-color: #8ab4f8;
+    }
+
+    .select-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #303134;
+      border: 1px solid #3c4043;
+      border-radius: 6px;
+      color: #e3e3e3;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    .select-input:focus {
+      border-color: #8ab4f8;
+    }
+
+    .select-input:hover {
+      border-color: #5f6368;
+    }
+
+    .select-input option {
+      background: #303134;
+      color: #e3e3e3;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #8ab4f8;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #3c4043;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: #8ab4f8;
+      color: #202124;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: #aecbfa;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #8ab4f8;
+      border: 1px solid #3c4043;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(138, 180, 248, 0.1);
+    }
+
+    .btn-danger {
+      background: #f28b82;
+      color: #202124;
+      border: none;
+    }
+
+    .btn-danger:hover {
+      background: #f6aca6;
+    }
+
+    .divider {
+      height: 1px;
+      background: #3c4043;
+      margin: 16px 0;
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .setting-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .setting-label-row label {
+      margin-bottom: 0 !important;
+    }
+
+    .btn-reset {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: 1px solid #3c4043;
+      border-radius: 4px;
+      color: #9aa0a6;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-reset:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e3e3e3;
+      border-color: #5f6368;
+    }
+
+    .confirm-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .confirm-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .confirm-dialog {
+      background: #292a2d;
+      border-radius: 12px;
+      padding: 20px;
+      width: 320px;
+      border: 1px solid #3c4043;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .confirm-overlay.show .confirm-dialog {
+      transform: scale(1);
+    }
+
+    .confirm-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e3e3e3;
+      margin-bottom: 12px;
+    }
+
+    .confirm-message {
+      font-size: 14px;
+      color: #9aa0a6;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .confirm-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-confirm-danger {
+      background: #c53929;
+      color: #fff;
+      border: none;
+    }
+
+    .btn-confirm-danger:hover {
+      background: #d93025;
+    }
+
+    .btn-reset-all {
+      width: 100%;
+      margin-top: 8px;
+      background: transparent;
+      border: 1px solid #5f6368;
+      color: #9aa0a6;
+    }
+
+    .btn-reset-all:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e3e3e3;
+    }
+  </style>
+</head>
+<body>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- 캐시 초기화 확인 모달 -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-dialog">
+      <div class="confirm-title" data-i18n="dialogs.clearCache.title"></div>
+      <div class="confirm-message" data-i18n-html="dialogs.clearCache.message"></div>
+      <div class="confirm-buttons">
+        <button class="btn btn-secondary" id="btn-confirm-cancel" data-i18n="settings.buttons.cancel"></button>
+        <button class="btn btn-confirm-danger" id="btn-confirm-ok" data-i18n="dialogs.clearCache.confirm"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전체 설정 초기화 확인 모달 -->
+  <div class="confirm-overlay" id="confirm-reset-all-overlay">
+    <div class="confirm-dialog">
+      <div class="confirm-title" data-i18n="dialogs.resetAll.title"></div>
+      <div class="confirm-message" data-i18n-html="dialogs.resetAll.message"></div>
+      <div class="confirm-buttons">
+        <button class="btn btn-secondary" id="btn-reset-all-cancel" data-i18n="settings.buttons.cancel"></button>
+        <button class="btn btn-confirm-danger" id="btn-reset-all-ok" data-i18n="dialogs.resetAll.confirm"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 저장되지 않은 변경사항 확인 모달 -->
+  <div class="confirm-overlay" id="confirm-unsaved-overlay">
+    <div class="confirm-dialog">
+      <div class="confirm-title" data-i18n="dialogs.unsavedChanges.title"></div>
+      <div class="confirm-message" data-i18n-html="dialogs.unsavedChanges.message"></div>
+      <div class="confirm-buttons">
+        <button class="btn btn-secondary" id="btn-unsaved-cancel" data-i18n="settings.buttons.cancel"></button>
+        <button class="btn btn-confirm-danger" id="btn-unsaved-discard" data-i18n="dialogs.unsavedChanges.discard"></button>
+        <button class="btn btn-primary" id="btn-unsaved-save" data-i18n="dialogs.unsavedChanges.save"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 언어 변경 재시작 확인 모달 -->
+  <div class="confirm-overlay" id="confirm-language-overlay">
+    <div class="confirm-dialog">
+      <div class="confirm-title" data-i18n="dialogs.languageChange.title"></div>
+      <div class="confirm-message" data-i18n-html="dialogs.languageChange.message"></div>
+      <div class="confirm-buttons">
+        <button class="btn btn-secondary" id="btn-language-cancel" data-i18n="dialogs.languageChange.cancel"></button>
+        <button class="btn btn-primary" id="btn-language-restart" data-i18n="dialogs.languageChange.restart"></button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal">
+    <div class="modal-header">
+      <h2 data-i18n="settings.title"></h2>
+      <button class="modal-close" id="modal-close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-content">
+      <div class="setting-item">
+        <div class="setting-label-row">
+          <label for="shortcut-input" data-i18n="settings.shortcut.label"></label>
+          <button class="btn-reset" id="btn-reset-shortcut" data-i18n-title="settings.shortcut.resetTitle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="shortcut-input-wrapper">
+          <input type="text" id="shortcut-input" readonly data-i18n-placeholder="settings.shortcut.placeholder">
+          <button class="shortcut-record-btn" id="shortcut-record" data-i18n="settings.shortcut.change"></button>
+        </div>
+        <small data-i18n="settings.shortcut.default"></small>
+      </div>
+      <div class="setting-item">
+        <label for="language-select" data-i18n="settings.language.label"></label>
+        <select id="language-select" class="select-input">
+          <option value="auto" data-i18n="settings.language.auto"></option>
+          <option value="en" data-i18n="settings.language.en"></option>
+          <option value="ko" data-i18n="settings.language.ko"></option>
+        </select>
+        <small data-i18n="settings.language.description"></small>
+      </div>
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" id="always-on-top">
+          <span data-i18n="settings.alwaysOnTop"></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" id="start-with-windows">
+          <span data-i18n="settings.startWithWindows"></span>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-item">
+        <label data-i18n="settings.appData.label"></label>
+        <button class="btn btn-danger" id="btn-clear-cache" style="width: 100%; margin-top: 6px;">
+          <span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            <span data-i18n="settings.appData.clearCache"></span>
+          </span>
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-item">
+        <label data-i18n="settings.resetSettings.label"></label>
+        <button class="btn btn-reset-all" id="btn-reset-all" style="width: 100%; margin-top: 6px;">
+          <span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            <span data-i18n="settings.resetSettings.resetAll"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-cancel" data-i18n="settings.buttons.cancel"></button>
+      <button class="btn btn-primary" id="btn-save" data-i18n="settings.buttons.save"></button>
+    </div>
+  </div>
+
+  <script>
+    const shortcutInput = document.getElementById('shortcut-input');
+    const shortcutRecordBtn = document.getElementById('shortcut-record');
+    const alwaysOnTopCheckbox = document.getElementById('always-on-top');
+    const startWithWindowsCheckbox = document.getElementById('start-with-windows');
+    const languageSelect = document.getElementById('language-select');
+    const btnSave = document.getElementById('btn-save');
+    const btnCancel = document.getElementById('btn-cancel');
+    const modalClose = document.getElementById('modal-close');
+    const backdrop = document.getElementById('backdrop');
+    const btnClearCache = document.getElementById('btn-clear-cache');
+    const btnResetShortcut = document.getElementById('btn-reset-shortcut');
+    const btnResetAll = document.getElementById('btn-reset-all');
+    
+    // 캐시 초기화 모달
+    const confirmOverlay = document.getElementById('confirm-overlay');
+    const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+    const btnConfirmOk = document.getElementById('btn-confirm-ok');
+    
+    // 전체 설정 초기화 모달
+    const confirmResetAllOverlay = document.getElementById('confirm-reset-all-overlay');
+    const btnResetAllCancel = document.getElementById('btn-reset-all-cancel');
+    const btnResetAllOk = document.getElementById('btn-reset-all-ok');
+    
+    // 저장되지 않은 변경사항 모달
+    const confirmUnsavedOverlay = document.getElementById('confirm-unsaved-overlay');
+    const btnUnsavedCancel = document.getElementById('btn-unsaved-cancel');
+    const btnUnsavedDiscard = document.getElementById('btn-unsaved-discard');
+    const btnUnsavedSave = document.getElementById('btn-unsaved-save');
+
+    let isRecordingShortcut = false;
+    let translations = {};
+    let currentLang = 'en';
+    
+    // 기본값
+    const DEFAULT_SETTINGS = {
+      shortcut: 'Shift+Z',
+      alwaysOnTop: true,
+      startWithWindows: true,
+      language: 'auto'
+    };
+    
+    // 원본 설정 저장 (변경 감지용)
+    let originalSettings = {};
+
+    // 번역 함수
+    function t(key) {
+      const keys = key.split('.');
+      let value = translations;
+      for (const k of keys) {
+        value = value?.[k];
+      }
+      return value || key;
+    }
+
+    // UI 번역 적용
+    function applyTranslations() {
+      // data-i18n 속성이 있는 요소들의 텍스트 변경
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      
+      // data-i18n-html 속성 (HTML 허용)
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        el.innerHTML = t(el.dataset.i18nHtml);
+      });
+      
+      // data-i18n-placeholder 속성
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+      
+      // data-i18n-title 속성
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.title = t(el.dataset.i18nTitle);
+      });
+    }
+
+    // 초기화
+    async function init() {
+      // 번역 로드
+      const { translations: trans, lang } = await window.electronAPI.getTranslations();
+      translations = trans;
+      currentLang = lang;
+      applyTranslations();
+      
+      // 설정 로드
+      const settings = await window.electronAPI.getSettings();
+      shortcutInput.value = settings.shortcut;
+      alwaysOnTopCheckbox.checked = settings.alwaysOnTop;
+      startWithWindowsCheckbox.checked = settings.startWithWindows;
+      languageSelect.value = settings.language || 'auto';
+      
+      // 원본 설정 저장
+      originalSettings = {
+        shortcut: settings.shortcut,
+        alwaysOnTop: settings.alwaysOnTop,
+        startWithWindows: settings.startWithWindows,
+        language: settings.language || 'auto'
+      };
+    }
+    
+    // 현재 설정 가져오기
+    function getCurrentSettings() {
+      return {
+        shortcut: shortcutInput.value,
+        alwaysOnTop: alwaysOnTopCheckbox.checked,
+        startWithWindows: startWithWindowsCheckbox.checked,
+        language: languageSelect.value
+      };
+    }
+    
+    // 변경사항 있는지 확인
+    function hasChanges() {
+      const current = getCurrentSettings();
+      return current.shortcut !== originalSettings.shortcut ||
+             current.alwaysOnTop !== originalSettings.alwaysOnTop ||
+             current.startWithWindows !== originalSettings.startWithWindows ||
+             current.language !== originalSettings.language;
+    }
+    
+    // 닫기 시도
+    function tryCloseModal() {
+      if (hasChanges()) {
+        confirmUnsavedOverlay.classList.add('show');
+      } else {
+        window.electronAPI.closeSettings();
+      }
+    }
+
+    function closeModal() {
+      window.electronAPI.closeSettings();
+    }
+
+    function startRecordingShortcut() {
+      isRecordingShortcut = true;
+      shortcutRecordBtn.classList.add('recording');
+      shortcutRecordBtn.textContent = t('settings.shortcut.recording');
+      shortcutInput.classList.add('recording');
+      shortcutInput.value = t('settings.shortcut.placeholder');
+      
+      // 전역 단축키 일시 해제
+      window.electronAPI.startShortcutRecording();
+    }
+    
+    function stopRecordingShortcut(restoreOriginal = false) {
+      isRecordingShortcut = false;
+      shortcutRecordBtn.classList.remove('recording');
+      shortcutRecordBtn.textContent = t('settings.shortcut.change');
+      shortcutInput.classList.remove('recording');
+      
+      // 전역 단축키 재등록
+      window.electronAPI.stopShortcutRecording();
+      
+      if (restoreOriginal) {
+        shortcutInput.value = originalSettings.shortcut;
+      }
+    }
+
+    // 키 코드를 Electron 단축키 형식으로 변환
+    function getKeyName(e) {
+      const modifiers = [];
+      
+      if (e.getModifierState('Control')) modifiers.push('Ctrl');
+      if (e.getModifierState('Alt')) modifiers.push('Alt');
+      if (e.getModifierState('Shift')) modifiers.push('Shift');
+      if (e.getModifierState('Meta') || e.getModifierState('OS')) modifiers.push('Super');
+      
+      const code = e.code;
+      
+      const modifierCodes = ['ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ShiftLeft', 'ShiftRight', 'MetaLeft', 'MetaRight', 'OSLeft', 'OSRight'];
+      if (modifierCodes.includes(code)) {
+        return { modifiers, mainKey: null, isModifierOnly: true };
+      }
+      
+      let mainKey = '';
+      
+      if (code.startsWith('Numpad')) {
+        const numpadKey = code.replace('Numpad', '');
+        if (numpadKey === 'Decimal') mainKey = 'numdec';
+        else if (numpadKey === 'Add') mainKey = 'numadd';
+        else if (numpadKey === 'Subtract') mainKey = 'numsub';
+        else if (numpadKey === 'Multiply') mainKey = 'nummult';
+        else if (numpadKey === 'Divide') mainKey = 'numdiv';
+        else if (numpadKey === 'Enter') mainKey = 'Enter';
+        else if (!isNaN(numpadKey)) mainKey = 'num' + numpadKey;
+        else mainKey = numpadKey;
+      }
+      else if (code.startsWith('F') && !isNaN(code.slice(1))) {
+        mainKey = code;
+      }
+      else {
+        const specialKeys = {
+          'Space': 'Space',
+          'Enter': 'Enter',
+          'Tab': 'Tab',
+          'Backspace': 'Backspace',
+          'Delete': 'Delete',
+          'Insert': 'Insert',
+          'Home': 'Home',
+          'End': 'End',
+          'PageUp': 'PageUp',
+          'PageDown': 'PageDown',
+          'ArrowUp': 'Up',
+          'ArrowDown': 'Down',
+          'ArrowLeft': 'Left',
+          'ArrowRight': 'Right',
+          'Escape': 'Escape',
+          'CapsLock': 'CapsLock',
+          'NumLock': 'NumLock',
+          'ScrollLock': 'ScrollLock',
+          'Pause': 'Pause',
+          'PrintScreen': 'PrintScreen',
+          'ContextMenu': 'ContextMenu',
+          'BracketLeft': '[',
+          'BracketRight': ']',
+          'Semicolon': ';',
+          'Quote': "'",
+          'Backquote': '`',
+          'Backslash': '\\',
+          'Slash': '/',
+          'Period': '.',
+          'Comma': ',',
+          'Minus': '-',
+          'Equal': '=',
+          'IntlBackslash': '\\',
+        };
+        
+        if (specialKeys[code]) {
+          mainKey = specialKeys[code];
+        } else if (code.startsWith('Key')) {
+          mainKey = code.replace('Key', '');
+        } else if (code.startsWith('Digit')) {
+          mainKey = code.replace('Digit', '');
+        } else {
+          mainKey = code;
+        }
+      }
+      
+      return { modifiers, mainKey, isModifierOnly: false };
+    }
+
+    async function saveSettings() {
+      const settings = getCurrentSettings();
+      
+      const languageChanged = await window.electronAPI.saveSettings(settings);
+      originalSettings = { ...settings };
+      
+      if (languageChanged) {
+        // 언어가 변경된 경우 재시작 다이얼로그 표시
+        showLanguageRestartDialog();
+      } else {
+        closeModal();
+      }
+    }
+
+    // 언어 변경 재시작 모달 열기/닫기
+    const confirmLanguageOverlay = document.getElementById('confirm-language-overlay');
+    const btnLanguageCancel = document.getElementById('btn-language-cancel');
+    const btnLanguageRestart = document.getElementById('btn-language-restart');
+    
+    function showLanguageRestartDialog() {
+      confirmLanguageOverlay.classList.add('show');
+    }
+    
+    function hideLanguageRestartDialog() {
+      confirmLanguageOverlay.classList.remove('show');
+    }
+    
+    btnLanguageCancel.addEventListener('click', () => {
+      hideLanguageRestartDialog();
+      closeModal();
+    });
+    
+    btnLanguageRestart.addEventListener('click', async () => {
+      await window.electronAPI.restartApp();
+    });
+
+    // 캐시 초기화 확인 모달 열기/닫기
+    function showConfirmDialog() {
+      confirmOverlay.classList.add('show');
+    }
+
+    function hideConfirmDialog() {
+      confirmOverlay.classList.remove('show');
+    }
+    
+    // 전체 설정 초기화 모달 열기/닫기
+    function showResetAllDialog() {
+      confirmResetAllOverlay.classList.add('show');
+    }
+    
+    function hideResetAllDialog() {
+      confirmResetAllOverlay.classList.remove('show');
+    }
+    
+    // 저장되지 않은 변경사항 모달 닫기
+    function hideUnsavedDialog() {
+      confirmUnsavedOverlay.classList.remove('show');
+    }
+    
+    // 단축키 기본값으로 초기화
+    function resetShortcut() {
+      shortcutInput.value = DEFAULT_SETTINGS.shortcut;
+    }
+    
+    // 전체 설정 기본값으로 초기화
+    function resetAllSettings() {
+      shortcutInput.value = DEFAULT_SETTINGS.shortcut;
+      alwaysOnTopCheckbox.checked = DEFAULT_SETTINGS.alwaysOnTop;
+      startWithWindowsCheckbox.checked = DEFAULT_SETTINGS.startWithWindows;
+      languageSelect.value = DEFAULT_SETTINGS.language;
+      hideResetAllDialog();
+    }
+
+    async function clearCache() {
+      hideConfirmDialog();
+      btnClearCache.disabled = true;
+      btnClearCache.querySelector('[data-i18n="settings.appData.clearCache"]').textContent = t('settings.appData.clearing');
+      await window.electronAPI.clearCache();
+    }
+
+    // 이벤트
+    shortcutRecordBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isRecordingShortcut) {
+        stopRecordingShortcut(true);
+      } else {
+        startRecordingShortcut();
+      }
+    });
+    btnSave.addEventListener('click', saveSettings);
+    btnCancel.addEventListener('click', tryCloseModal);
+    modalClose.addEventListener('click', tryCloseModal);
+    backdrop.addEventListener('click', tryCloseModal);
+    
+    // 단축키 기본값 초기화
+    btnResetShortcut.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isRecordingShortcut) {
+        stopRecordingShortcut(true);
+      }
+      resetShortcut();
+    });
+    
+    // 녹음 중 다른 곳 클릭하면 녹음 취소
+    document.addEventListener('click', (e) => {
+      if (!isRecordingShortcut) return;
+      
+      if (e.target === shortcutRecordBtn || e.target === shortcutInput) return;
+      
+      stopRecordingShortcut(true);
+    });
+    
+    // 캐시 초기화 모달
+    btnClearCache.addEventListener('click', showConfirmDialog);
+    btnConfirmCancel.addEventListener('click', hideConfirmDialog);
+    btnConfirmOk.addEventListener('click', clearCache);
+    confirmOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmOverlay) hideConfirmDialog();
+    });
+    
+    // 전체 설정 초기화 모달
+    btnResetAll.addEventListener('click', showResetAllDialog);
+    btnResetAllCancel.addEventListener('click', hideResetAllDialog);
+    btnResetAllOk.addEventListener('click', resetAllSettings);
+    confirmResetAllOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmResetAllOverlay) hideResetAllDialog();
+    });
+    
+    // 저장되지 않은 변경사항 모달
+    btnUnsavedCancel.addEventListener('click', hideUnsavedDialog);
+    btnUnsavedDiscard.addEventListener('click', closeModal);
+    btnUnsavedSave.addEventListener('click', saveSettings);
+    confirmUnsavedOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmUnsavedOverlay) hideUnsavedDialog();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !isRecordingShortcut) {
+        if (confirmOverlay.classList.contains('show')) {
+          hideConfirmDialog();
+          return;
+        }
+        if (confirmResetAllOverlay.classList.contains('show')) {
+          hideResetAllDialog();
+          return;
+        }
+        if (confirmUnsavedOverlay.classList.contains('show')) {
+          hideUnsavedDialog();
+          return;
+        }
+        
+        tryCloseModal();
+        return;
+      }
+
+      if (!isRecordingShortcut) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (e.code === 'Escape') {
+        stopRecordingShortcut(true);
+        return;
+      }
+      
+      const result = getKeyName(e);
+      
+      if (result.isModifierOnly) {
+        if (result.modifiers.length > 0) {
+          shortcutInput.value = result.modifiers.join('+') + '+...';
+        }
+        return;
+      }
+      
+      const allKeys = [...result.modifiers];
+      if (result.mainKey) {
+        allKeys.push(result.mainKey);
+      }
+      
+      const shortcut = allKeys.join('+');
+      if (shortcut && result.mainKey) {
+        shortcutInput.value = shortcut;
+        stopRecordingShortcut(false);
+      }
+    });
+    
+    document.addEventListener('keyup', (e) => {
+      if (!isRecordingShortcut) return;
+      
+      const modifiers = [];
+      if (e.getModifierState('Control')) modifiers.push('Ctrl');
+      if (e.getModifierState('Alt')) modifiers.push('Alt');
+      if (e.getModifierState('Shift')) modifiers.push('Shift');
+      if (e.getModifierState('Meta') || e.getModifierState('OS')) modifiers.push('Super');
+      
+      if (shortcutInput.value.endsWith('+...')) {
+        if (modifiers.length === 0) {
+          shortcutInput.value = t('settings.shortcut.placeholder');
+        } else {
+          shortcutInput.value = modifiers.join('+') + '+...';
+        }
+      }
+    });
+    
+    window.addEventListener('blur', () => {
+      if (isRecordingShortcut) {
+        stopRecordingShortcut(true);
+      }
+    });
+    
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && isRecordingShortcut) {
+        stopRecordingShortcut(true);
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
