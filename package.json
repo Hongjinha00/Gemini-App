@@ -6,7 +6,10 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "build:win": "electron-builder --win"
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --mac --linux"
   },
   "keywords": [
     "gemini",
@@ -14,7 +17,7 @@
     "ai",
     "desktop"
   ],
-  "author": "",
+  "author": "Hongjinha00",
   "license": "MIT",
   "devDependencies": {
     "electron": "^40.0.0",
@@ -30,6 +33,16 @@
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["tar.gz"],
+      "icon": "assets/icon.png",
+      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,

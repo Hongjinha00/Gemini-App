@@ -75,6 +75,10 @@
       "label": "설정 초기화",
       "resetAll": "전체 설정 기본값으로 초기화"
     },
+    "about": {
+      "version": "버전",
+      "reportBug": "버그 리포트"
+    },
     "buttons": {
       "cancel": "취소",
       "save": "저장"

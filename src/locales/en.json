@@ -75,6 +75,10 @@
       "label": "Reset Settings",
       "resetAll": "Reset all settings to default"
     },
+    "about": {
+      "version": "Version",
+      "reportBug": "Report Bug"
+    },
     "buttons": {
       "cancel": "Cancel",
       "save": "Save"

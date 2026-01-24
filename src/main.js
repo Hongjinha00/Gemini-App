@@ -2,7 +2,15 @@ const { app, BaseWindow, BrowserWindow, WebContentsView, globalShortcut, ipcMain
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
-const sharp = require('sharp');
+
+// sharp는 스크린샷 캡처 시에만 lazy load
+let sharp = null;
+function getSharp() {
+  if (!sharp) {
+    sharp = require('sharp');
+  }
+  return sharp;
+}
 
 // Windows에서 작업 관리자/작업 표시줄에 앱 이름 표시
 if (process.platform === 'win32') {
@@ -421,7 +429,33 @@ body.fade-out .loading-content {
     return { action: 'deny' };
   });
 
-  contentView.webContents.on('did-navigate', () => sendNavState());
+  // 허용된 URL인지 확인
+  function isAllowedUrl(url) {
+    const allowedDomains = [
+      'gemini.google.com',
+      'aistudio.google.com',
+      'accounts.google.com'  // 로그인 플로우용
+    ];
+    
+    try {
+      const urlObj = new URL(url);
+      return allowedDomains.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain));
+    } catch {
+      return false;
+    }
+  }
+
+  // URL 변경 감지 및 허용되지 않은 URL 차단
+  contentView.webContents.on('did-navigate', (event, url) => {
+    sendNavState();
+    
+    // 허용되지 않은 URL이면 현재 모드의 기본 페이지로 리다이렉트
+    if (!isAllowedUrl(url)) {
+      console.log('Blocked navigation to:', url);
+      contentView.webContents.loadURL(getURL(currentMode));
+    }
+  });
+
   contentView.webContents.on('did-navigate-in-page', () => sendNavState());
   contentView.webContents.on('did-finish-load', () => {
     mainWindow.hideLoading();
@@ -759,15 +793,18 @@ ipcMain.handle('merge-screenshots', async (event, captures) => {
       height: c.height
     }));
     
+    // sharp lazy load
+    const sharpLib = getSharp();
+    
     // 첫 이미지로 너비 확인
-    const firstMeta = await sharp(images[0].buffer).metadata();
+    const firstMeta = await sharpLib(images[0].buffer).metadata();
     const width = firstMeta.width;
     
     // 전체 높이 계산
     let totalHeight = 0;
     const metadatas = [];
     for (const img of images) {
-      const meta = await sharp(img.buffer).metadata();
+      const meta = await sharpLib(img.buffer).metadata();
       metadatas.push(meta);
       totalHeight += meta.height;
     }
@@ -786,7 +823,7 @@ ipcMain.handle('merge-screenshots', async (event, captures) => {
     }
     
     // 합쳐진 이미지 생성
-    const mergedImage = await sharp({
+    const mergedImage = await sharpLib({
       create: {
         width: width,
         height: totalHeight,
@@ -958,9 +995,10 @@ app.whenReady().then(() => {
   registerShortcut();
   setAutoLaunch(store.get('startWithWindows'));
   
+  // 테마 감지 (5초 간격, 창이 보일 때만)
   setInterval(() => {
-    if (mainWindow && contentView && currentMode === 'gemini') detectTheme();
-  }, 3000);
+    if (mainWindow && mainWindow.isVisible() && contentView && currentMode === 'gemini') detectTheme();
+  }, 5000);
 });
 
 app.on('window-all-closed', () => {});
