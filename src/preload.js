@@ -13,6 +13,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 외부 브라우저
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   
+  // 스크린샷
+  startScreenshotMode: () => ipcRenderer.send('start-screenshot-mode'),
+  captureScreenshot: (options) => ipcRenderer.invoke('capture-screenshot', options),
+  onScreenshotModeChanged: (callback) => ipcRenderer.on('screenshot-mode-changed', (event, isActive) => callback(isActive)),
+  
   // 네비게이션
   navBack: () => ipcRenderer.send('nav-back'),
   navForward: () => ipcRenderer.send('nav-forward'),
@@ -37,5 +42,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onNavState: (callback) => ipcRenderer.on('nav-state', (event, state) => callback(state)),
   onContentLoaded: (callback) => ipcRenderer.on('content-loaded', callback),
   onThemeChanged: (callback) => ipcRenderer.on('theme-changed', (event, theme) => callback(theme)),
-  onModeSwitched: (callback) => ipcRenderer.on('mode-switched', (event, mode) => callback(mode))
+  onModeSwitched: (callback) => ipcRenderer.on('mode-switched', (event, mode) => callback(mode)),
+  onScreenshotButtonVisibilityChanged: (callback) => ipcRenderer.on('screenshot-button-visibility-changed', (event, show) => callback(show))
 });

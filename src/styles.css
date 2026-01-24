@@ -108,6 +108,15 @@ html, body {
   background: transparent;
 }
 
+.nav-btn.screenshot-active {
+  background: rgba(138, 180, 248, 0.2);
+  color: #8ab4f8;
+}
+
+.nav-btn.screenshot-active:hover {
+  background: rgba(138, 180, 248, 0.3);
+}
+
 .window-btn {
   width: 46px;
 }

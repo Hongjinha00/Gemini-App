@@ -6,6 +6,7 @@
     "back": "뒤로 가기",
     "forward": "앞으로 가기",
     "refresh": "새로고침",
+    "screenshot": "스크린샷",
     "switchToAIStudio": "AI Studio로 전환",
     "switchToGemini": "Gemini로 전환",
     "settings": "설정",
@@ -16,6 +17,15 @@
   "loading": {
     "switchingToGemini": "Gemini App으로 전환중입니다",
     "switchingToAIStudio": "AI Studio로 전환중입니다"
+  },
+  "screenshot": {
+    "saveTitle": "스크린샷 저장",
+    "noMessages": "캡처할 메시지를 찾을 수 없습니다",
+    "selected": "개 선택됨",
+    "selectAll": "전체 선택",
+    "deselectAll": "전체 해제",
+    "capture": "캡처",
+    "cancel": "취소"
   },
   "settings": {
     "title": "설정",
@@ -36,6 +46,26 @@
     },
     "alwaysOnTop": "항상 위에 표시",
     "startWithWindows": "Windows 시작 시 자동 실행",
+    "windowSize": {
+      "label": "창 크기",
+      "description": "시작 시 기본 창 크기",
+      "slim": "슬림 (442×589)",
+      "wide": "와이드 (900×625)"
+    },
+    "runInBackground": {
+      "label": "닫기 시 백그라운드 실행",
+      "description": "창을 닫을 때 시스템 트레이에서 계속 실행"
+    },
+    "rememberWindowSize": "종료 시 창 크기 기억",
+    "rememberLastPage": {
+      "label": "마지막 페이지 기억",
+      "description": "Gemini와 AI Studio 간 전환 시 마지막으로 본 페이지 복원"
+    },
+    "screenshotButton": {
+      "label": "스크린샷 버튼 표시",
+      "description": "긴 코드는 제대로 캡처가 불가능할 수 있습니다."
+    },
+    "experimental": "실험적",
     "appData": {
       "label": "앱 데이터 관리",
       "clearCache": "캐시 초기화",

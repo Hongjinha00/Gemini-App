@@ -6,6 +6,7 @@
     "back": "Back",
     "forward": "Forward",
     "refresh": "Refresh",
+    "screenshot": "Screenshot",
     "switchToAIStudio": "Switch to AI Studio",
     "switchToGemini": "Switch to Gemini",
     "settings": "Settings",
@@ -16,6 +17,15 @@
   "loading": {
     "switchingToGemini": "Switching to Gemini App...",
     "switchingToAIStudio": "Switching to AI Studio..."
+  },
+  "screenshot": {
+    "saveTitle": "Save Screenshot",
+    "noMessages": "No messages found to capture",
+    "selected": "selected",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "capture": "Capture",
+    "cancel": "Cancel"
   },
   "settings": {
     "title": "Settings",
@@ -36,6 +46,26 @@
     },
     "alwaysOnTop": "Always on top",
     "startWithWindows": "Start with Windows",
+    "windowSize": {
+      "label": "Window Size",
+      "description": "Default window size on startup",
+      "slim": "Slim (442×589)",
+      "wide": "Wide (900×625)"
+    },
+    "runInBackground": {
+      "label": "Run in background when closed",
+      "description": "Keep app running in system tray when window is closed"
+    },
+    "rememberWindowSize": "Remember window size on exit",
+    "rememberLastPage": {
+      "label": "Remember last page",
+      "description": "Restore last viewed page when switching between Gemini and AI Studio"
+    },
+    "screenshotButton": {
+      "label": "Show screenshot button",
+      "description": "Long code blocks may not capture properly."
+    },
+    "experimental": "Experimental",
     "appData": {
       "label": "App Data",
       "clearCache": "Clear Cache",

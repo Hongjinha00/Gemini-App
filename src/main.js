@@ -1,7 +1,8 @@
-const { app, BaseWindow, WebContentsView, globalShortcut, ipcMain, Tray, Menu, screen, nativeImage, shell, session } = require('electron');
+const { app, BaseWindow, BrowserWindow, WebContentsView, globalShortcut, ipcMain, Tray, Menu, screen, nativeImage, shell, session, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
+const sharp = require('sharp');
 
 // Windows에서 작업 관리자/작업 표시줄에 앱 이름 표시
 if (process.platform === 'win32') {
@@ -61,6 +62,14 @@ const store = new Store({
     startWithWindows: true,
     lastMode: 'gemini',
     language: 'auto', // 기본값: 시스템 언어
+    // 새 설정들
+    runInBackground: true, // 닫기 시 백그라운드 실행
+    windowSize: 'slim', // slim(442x589) 또는 wide(900x625)
+    rememberWindowSize: false, // 마지막 창 크기 기억
+    rememberLastPage: false, // 마지막 페이지 URL 기억
+    savedWindowSize: null, // 저장된 창 크기
+    lastGeminiUrl: null, // 마지막 Gemini URL
+    lastAIStudioUrl: null, // 마지막 AI Studio URL
   }
 });
 
@@ -68,20 +77,23 @@ const store = new Store({
 let mainWindow = null;
 let contentView = null;
 let loadingView = null;
-let settingsView = null;
+let settingsWindow = null;
 let tray = null;
 let isQuitting = false;
 let currentMode = 'gemini';
+let isScreenshotMode = false;
 
-// 기본 창 설정
-const DEFAULT_WIDTH = 460;
-const DEFAULT_HEIGHT = 670;
+// 기본 창 설정 (프리셋)
+const WINDOW_PRESETS = {
+  slim: { width: 442, height: 589 },
+  wide: { width: 900, height: 625 }
+};
 const TITLEBAR_HEIGHT = 32;
 
 // 창 상태 (세션 중에만 유지)
 let windowState = {
-  width: DEFAULT_WIDTH,
-  height: DEFAULT_HEIGHT,
+  width: WINDOW_PRESETS.slim.width,
+  height: WINDOW_PRESETS.slim.height,
   x: null,
   y: null
 };
@@ -93,12 +105,50 @@ const BASE_URLS = {
 };
 
 // 언어 설정이 적용된 URL 가져오기
-function getURL(mode) {
+function getURL(mode, useSavedUrl = false) {
   const lang = store.get('language');
   const baseUrl = BASE_URLS[mode];
-  // auto이면 시스템 언어 사용, 아니면 설정된 언어 사용
   const actualLang = lang === 'auto' ? getSystemLanguage() : lang;
+  
+  // 마지막 페이지 기억이 켜져있고 저장된 URL이 있으면 사용
+  if (useSavedUrl && store.get('rememberLastPage')) {
+    const savedUrlKey = mode === 'gemini' ? 'lastGeminiUrl' : 'lastAIStudioUrl';
+    const savedUrl = store.get(savedUrlKey);
+    if (savedUrl) {
+      return savedUrl;
+    }
+  }
+  
   return `${baseUrl}?hl=${actualLang}`;
+}
+
+// 현재 URL 저장
+function saveCurrentUrl() {
+  if (contentView) {
+    const currentUrl = contentView.webContents.getURL();
+    if (currentUrl) {
+      if (currentMode === 'gemini') {
+        store.set('lastGeminiUrl', currentUrl);
+      } else if (currentMode === 'aistudio') {
+        store.set('lastAIStudioUrl', currentUrl);
+      }
+    }
+  }
+}
+
+// 초기 창 크기 계산
+function getInitialWindowSize() {
+  // 마지막 창 크기 기억이 켜져있고 저장된 크기가 있으면 사용
+  if (store.get('rememberWindowSize')) {
+    const savedSize = store.get('savedWindowSize');
+    if (savedSize && savedSize.width && savedSize.height) {
+      return savedSize;
+    }
+  }
+  
+  // 아니면 프리셋 사용
+  const preset = store.get('windowSize') || 'slim';
+  return WINDOW_PRESETS[preset] || WINDOW_PRESETS.slim;
 }
 
 // 현재 앱 UI 언어 가져오기
@@ -112,6 +162,11 @@ const CHROME_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit
 
 function createWindow() {
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  
+  // 초기 창 크기 결정
+  const initialSize = getInitialWindowSize();
+  windowState.width = initialSize.width;
+  windowState.height = initialSize.height;
   
   const x = windowState.x ?? Math.round((screenWidth - windowState.width) / 2);
   const y = windowState.y ?? Math.round((screenHeight - windowState.height) / 2 - 50);
@@ -143,7 +198,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      partition: 'persist:gemini'
+      partition: 'persist:gemini',
+      preload: path.join(__dirname, 'preload-content.js')
     }
   });
   mainWindow.contentView.addChildView(contentView);
@@ -155,17 +211,6 @@ function createWindow() {
       contextIsolation: true
     }
   });
-
-  // 설정 모달 WebContentsView 생성
-  settingsView = new WebContentsView({
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      transparent: true
-    }
-  });
-  settingsView.setBackgroundColor('#00000000');
 
   // titlebarView를 mainWindow.webContents처럼 사용하기 위해 참조 저장
   mainWindow.titlebarView = titlebarView;
@@ -190,12 +235,6 @@ function createWindow() {
       y: TITLEBAR_HEIGHT,
       width: width,
       height: height - TITLEBAR_HEIGHT
-    });
-    settingsView.setBounds({
-      x: 0,
-      y: 0,
-      width: width,
-      height: height
     });
   };
 
@@ -270,17 +309,53 @@ body.fade-out .loading-content {
     } catch (e) {}
   };
 
-  // 설정 모달 표시/숨기기
+  // 설정 창 표시/숨기기
   mainWindow.showSettings = () => {
-    settingsView.webContents.loadFile(path.join(__dirname, 'settings.html'));
-    try { mainWindow.contentView.removeChildView(settingsView); } catch(e) {}
-    mainWindow.contentView.addChildView(settingsView);
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.focus();
+      return;
+    }
+    
+    const mainBounds = mainWindow.getBounds();
+    
+    // 앱 창이 900x625 이상이면 설정 창도 크게
+    const isLargeWindow = mainBounds.width >= 900 && mainBounds.height >= 625;
+    const settingsWidth = isLargeWindow ? 500 : 400;
+    const settingsHeight = isLargeWindow ? 600 : 500;
+    
+    settingsWindow = new BrowserWindow({
+      width: settingsWidth,
+      height: settingsHeight,
+      minWidth: 360,
+      minHeight: 400,
+      x: Math.round(mainBounds.x + (mainBounds.width - settingsWidth) / 2),
+      y: Math.round(mainBounds.y + (mainBounds.height - settingsHeight) / 2),
+      parent: mainWindow,
+      modal: false,
+      frame: false,
+      resizable: true,
+      minimizable: false,
+      maximizable: false,
+      skipTaskbar: true,
+      alwaysOnTop: store.get('alwaysOnTop'),
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+    
+    settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+    
+    settingsWindow.on('closed', () => {
+      settingsWindow = null;
+    });
   };
 
   mainWindow.hideSettings = () => {
-    try {
-      mainWindow.contentView.removeChildView(settingsView);
-    } catch (e) {}
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.close();
+    }
   };
 
   // 초기 bounds 설정
@@ -296,9 +371,9 @@ body.fade-out .loading-content {
   const ses = session.fromPartition('persist:gemini');
   ses.setUserAgent(CHROME_USER_AGENT);
   
-  // 초기 URL 로드
+  // 초기 URL 로드 (저장된 URL 사용 가능)
   currentMode = store.get('lastMode');
-  contentView.webContents.loadURL(getURL(currentMode));
+  contentView.webContents.loadURL(getURL(currentMode, true));
 
   // 타이틀바 로드 완료 시 창 표시
   titlebarView.webContents.once('did-finish-load', () => {
@@ -464,7 +539,12 @@ ipcMain.handle('get-settings', () => ({
   alwaysOnTop: store.get('alwaysOnTop'),
   startWithWindows: store.get('startWithWindows'),
   lastMode: store.get('lastMode'),
-  language: store.get('language')
+  language: store.get('language'),
+  windowSize: store.get('windowSize'),
+  runInBackground: store.get('runInBackground'),
+  rememberWindowSize: store.get('rememberWindowSize'),
+  rememberLastPage: store.get('rememberLastPage'),
+  showScreenshotButton: store.get('showScreenshotButton', false)
 }));
 
 ipcMain.handle('get-translations', () => {
@@ -492,6 +572,36 @@ ipcMain.handle('save-settings', (event, settings) => {
   if (settings.language !== undefined && settings.language !== store.get('language')) {
     store.set('language', settings.language);
     languageChanged = true;
+  }
+  
+  // 새 설정들
+  if (settings.windowSize !== undefined) {
+    store.set('windowSize', settings.windowSize);
+  }
+  if (settings.runInBackground !== undefined) {
+    store.set('runInBackground', settings.runInBackground);
+  }
+  if (settings.rememberWindowSize !== undefined) {
+    store.set('rememberWindowSize', settings.rememberWindowSize);
+    // 끄면 저장된 창 크기도 초기화
+    if (!settings.rememberWindowSize) {
+      store.set('savedWindowSize', null);
+    }
+  }
+  if (settings.rememberLastPage !== undefined) {
+    store.set('rememberLastPage', settings.rememberLastPage);
+    // 끄면 저장된 URL도 초기화
+    if (!settings.rememberLastPage) {
+      store.set('lastGeminiUrl', null);
+      store.set('lastAIStudioUrl', null);
+    }
+  }
+  if (settings.showScreenshotButton !== undefined) {
+    store.set('showScreenshotButton', settings.showScreenshotButton);
+    // 렌더러에게 스크린샷 버튼 표시 상태 알림
+    if (mainWindow?.titlebarView) {
+      mainWindow.titlebarView.webContents.send('screenshot-button-visibility-changed', settings.showScreenshotButton);
+    }
   }
   
   // 언어 변경 시 페이지 새로고침
@@ -546,6 +656,232 @@ ipcMain.on('nav-refresh', () => {
   if (contentView) contentView.webContents.reload();
 });
 
+// 스크린샷 모드 시작
+ipcMain.on('start-screenshot-mode', async () => {
+  if (!contentView) return;
+  
+  isScreenshotMode = !isScreenshotMode;
+  
+  // 타이틀바에 모드 변경 알림
+  if (mainWindow?.titlebarView) {
+    mainWindow.titlebarView.webContents.send('screenshot-mode-changed', isScreenshotMode);
+  }
+  
+  if (isScreenshotMode) {
+    try {
+      // 스크린샷 선택 UI 주입 (외부 파일에서 읽기)
+      const screenshotScript = fs.readFileSync(path.join(__dirname, 'screenshot-inject.js'), 'utf8');
+      await contentView.webContents.executeJavaScript(screenshotScript);
+    } catch (err) {
+      console.error('Screenshot script injection failed:', err);
+      isScreenshotMode = false;
+      if (mainWindow?.titlebarView) {
+        mainWindow.titlebarView.webContents.send('screenshot-mode-changed', false);
+      }
+    }
+  } else {
+    // 스크린샷 모드 종료 - UI 정리
+    await contentView.webContents.executeJavaScript(`
+      (function() {
+        document.querySelectorAll('.screenshot-checkbox-container').forEach(el => el.remove());
+        document.querySelectorAll('.screenshot-message-wrapper').forEach(el => {
+          el.classList.remove('screenshot-message-wrapper', 'selected');
+          el.style.outline = '';
+          el.style.position = '';
+        });
+        document.getElementById('screenshot-toolbar')?.remove();
+        document.getElementById('screenshot-styles')?.remove();
+      })();
+    `);
+  }
+});
+
+// 스크린샷 캡처 (단일)
+ipcMain.handle('capture-screenshot', async (event, options) => {
+  if (!contentView) return { success: false };
+  
+  try {
+    // 전체 페이지 캡처
+    const image = await contentView.webContents.capturePage({
+      x: options.x,
+      y: options.y,
+      width: options.width,
+      height: options.height
+    });
+    
+    // 저장 다이얼로그 표시
+    const { filePath } = await dialog.showSaveDialog(mainWindow, {
+      title: t('screenshot.saveTitle') || 'Save Screenshot',
+      defaultPath: path.join(app.getPath('pictures'), 'gemini-screenshot-' + Date.now() + '.png'),
+      filters: [{ name: 'PNG Image', extensions: ['png'] }]
+    });
+    
+    if (filePath) {
+      fs.writeFileSync(filePath, image.toPNG());
+      return { success: true, path: filePath };
+    }
+    
+    return { success: false, cancelled: true };
+  } catch (error) {
+    console.error('Screenshot capture error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 스크린샷 영역 캡처 (데이터만 반환)
+ipcMain.handle('capture-screenshot-area', async (event, options) => {
+  if (!contentView) return null;
+  
+  try {
+    const image = await contentView.webContents.capturePage({
+      x: options.x,
+      y: options.y,
+      width: options.width,
+      height: options.height
+    });
+    
+    // Base64로 반환
+    return image.toPNG().toString('base64');
+  } catch (error) {
+    console.error('Screenshot area capture error:', error);
+    return null;
+  }
+});
+
+// 여러 스크린샷 합치기
+ipcMain.handle('merge-screenshots', async (event, captures) => {
+  if (!captures || captures.length === 0) return { success: false };
+  
+  try {
+    // 각 캡처를 Buffer로 변환
+    const images = captures.map(c => ({
+      buffer: Buffer.from(c.data, 'base64'),
+      height: c.height
+    }));
+    
+    // 첫 이미지로 너비 확인
+    const firstMeta = await sharp(images[0].buffer).metadata();
+    const width = firstMeta.width;
+    
+    // 전체 높이 계산
+    let totalHeight = 0;
+    const metadatas = [];
+    for (const img of images) {
+      const meta = await sharp(img.buffer).metadata();
+      metadatas.push(meta);
+      totalHeight += meta.height;
+    }
+    
+    // 이미지 합치기
+    const compositeImages = [];
+    let currentY = 0;
+    
+    for (let i = 0; i < images.length; i++) {
+      compositeImages.push({
+        input: images[i].buffer,
+        top: currentY,
+        left: 0
+      });
+      currentY += metadatas[i].height;
+    }
+    
+    // 합쳐진 이미지 생성
+    const mergedImage = await sharp({
+      create: {
+        width: width,
+        height: totalHeight,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      }
+    })
+    .composite(compositeImages)
+    .png()
+    .toBuffer();
+    
+    // 저장 다이얼로그
+    const { filePath } = await dialog.showSaveDialog(mainWindow, {
+      title: t('screenshot.saveTitle') || 'Save Screenshot',
+      defaultPath: path.join(app.getPath('pictures'), 'gemini-screenshot-' + Date.now() + '.png'),
+      filters: [{ name: 'PNG Image', extensions: ['png'] }]
+    });
+    
+    if (filePath) {
+      fs.writeFileSync(filePath, mergedImage);
+      return { success: true, path: filePath };
+    }
+    
+    return { success: false, cancelled: true };
+  } catch (error) {
+    console.error('Screenshot merge error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 스크린샷 모드 종료
+ipcMain.on('end-screenshot-mode', () => {
+  isScreenshotMode = false;
+  if (mainWindow?.titlebarView) {
+    mainWindow.titlebarView.webContents.send('screenshot-mode-changed', false);
+  }
+});
+
+// 스크린샷용 창 상태 저장
+let captureWindowState = null;
+
+// 캡처용 창 최대화
+ipcMain.handle('maximize-for-capture', async () => {
+  if (!mainWindow) return { success: false };
+  
+  try {
+    // 현재 상태 저장
+    captureWindowState = {
+      bounds: mainWindow.getBounds(),
+      isMaximized: mainWindow.isMaximized()
+    };
+    
+    // 화면 크기 가져오기
+    const { workArea } = screen.getPrimaryDisplay();
+    
+    // 창 최대화 (전체 화면 작업 영역)
+    mainWindow.setBounds({
+      x: workArea.x,
+      y: workArea.y,
+      width: workArea.width,
+      height: workArea.height
+    });
+    
+    // 렌더링 대기
+    await new Promise(r => setTimeout(r, 300));
+    
+    return { 
+      success: true, 
+      width: workArea.width, 
+      height: workArea.height - 32 // 타이틀바 높이 제외
+    };
+  } catch (error) {
+    console.error('Maximize for capture error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 캡처 후 창 복원
+ipcMain.handle('restore-after-capture', async () => {
+  if (!mainWindow || !captureWindowState) return { success: false };
+  
+  try {
+    if (captureWindowState.isMaximized) {
+      mainWindow.maximize();
+    } else {
+      mainWindow.setBounds(captureWindowState.bounds);
+    }
+    captureWindowState = null;
+    return { success: true };
+  } catch (error) {
+    console.error('Restore after capture error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.on('open-settings', () => {
   if (mainWindow) mainWindow.showSettings();
 });
@@ -564,14 +900,20 @@ ipcMain.on('stop-shortcut-recording', () => {
 });
 
 ipcMain.on('switch-mode', (event, mode) => {
-  console.log('switch-mode called:', mode, 'URL:', getURL(mode));
+  console.log('switch-mode called:', mode);
   if (contentView && BASE_URLS[mode]) {
+    // 현재 URL 저장 (모드 전환 전)
+    saveCurrentUrl();
+    
     currentMode = mode;
     store.set('lastMode', mode);
     mainWindow.showLoading(mode);
     mainWindow.titlebarView.webContents.send('mode-switched', mode);
-    console.log('Loading URL:', getURL(mode));
-    contentView.webContents.loadURL(getURL(mode));
+    
+    // 저장된 URL 사용해서 로드
+    const targetUrl = getURL(mode, true);
+    console.log('Loading URL:', targetUrl);
+    contentView.webContents.loadURL(targetUrl);
   }
 });
 
@@ -585,7 +927,24 @@ ipcMain.on('close-window', () => {
   if (mainWindow) {
     const bounds = mainWindow.getBounds();
     windowState = { width: bounds.width, height: bounds.height, x: bounds.x, y: bounds.y };
-    mainWindow.hide();
+    
+    // 마지막 창 크기 저장 (설정이 켜져있을 경우)
+    if (store.get('rememberWindowSize')) {
+      store.set('savedWindowSize', { width: bounds.width, height: bounds.height });
+    }
+    
+    // 마지막 URL 저장 (설정이 켜져있을 경우)
+    if (store.get('rememberLastPage')) {
+      saveCurrentUrl();
+    }
+    
+    // 백그라운드 실행 설정에 따라 처리
+    if (store.get('runInBackground')) {
+      mainWindow.hide();
+    } else {
+      isQuitting = true;
+      app.quit();
+    }
   }
 });
 

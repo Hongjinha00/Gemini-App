@@ -17,22 +17,26 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: rgba(0, 0, 0, 0.85);
+      background: #202124;
       color: #e3e3e3;
       height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      overflow: hidden;
     }
 
     .modal {
       background: #202124;
-      border-radius: 12px;
-      width: 380px;
-      max-width: 90%;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      border: 1px solid #3c4043;
-      animation: fadeIn 0.2s ease;
+      border-radius: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      box-shadow: none;
+      border: none;
+      animation: none;
+      display: flex;
+      flex-direction: column;
     }
 
     @keyframes fadeIn {
@@ -46,6 +50,7 @@
       justify-content: space-between;
       padding: 12px 20px;
       border-bottom: 1px solid #3c4043;
+      -webkit-app-region: drag;
     }
 
     .modal-header h2 {
@@ -59,6 +64,7 @@
       align-items: center;
       justify-content: center;
       width: 32px;
+      -webkit-app-region: no-drag;
       height: 32px;
       background: transparent;
       border: none;
@@ -75,6 +81,26 @@
 
     .modal-content {
       padding: 16px 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* 스크롤바 스타일 */
+    .modal-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: #5f6368;
+      border-radius: 4px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+      background: #80868b;
     }
 
     .setting-item {
@@ -85,7 +111,7 @@
       margin-bottom: 0;
     }
 
-    .setting-item > label {
+    .setting-item > label:not(.checkbox-label) {
       display: block;
       font-size: 14px;
       font-weight: 500;
@@ -96,6 +122,7 @@
     .setting-item small {
       display: block;
       margin-top: 6px;
+      margin-left: 56px;
       font-size: 12px;
       color: #9aa0a6;
     }
@@ -179,17 +206,76 @@
 
     .checkbox-label {
       display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
       font-size: 14px;
     }
 
     .checkbox-label input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #8ab4f8;
-      cursor: pointer;
+      display: none;
+    }
+
+    /* 토글 스위치 스타일 */
+    .toggle-switch {
+      display: block;
+      position: relative;
+      min-width: 44px;
+      width: 44px;
+      height: 24px;
+      background: #5f6368;
+      border-radius: 12px;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #e3e3e3;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .toggle-switch {
+      background: #8ab4f8;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .toggle-switch::after {
+      transform: translateX(20px);
+    }
+
+    .checkbox-label .label-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    /* 실험적 기능 배지 */
+    .badge-experimental {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: rgba(251, 188, 4, 0.15);
+      border: 1px solid rgba(251, 188, 4, 0.4);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #fdd663;
+    }
+
+    .badge-experimental svg {
+      width: 12px;
+      height: 12px;
     }
 
     .modal-footer {
@@ -365,8 +451,6 @@
   </style>
 </head>
 <body>
-  <div class="backdrop" id="backdrop"></div>
-
   <!-- 캐시 초기화 확인 모달 -->
   <div class="confirm-overlay" id="confirm-overlay">
     <div class="confirm-dialog">
@@ -454,14 +538,69 @@
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" id="always-on-top">
-          <span data-i18n="settings.alwaysOnTop"></span>
+          <span class="toggle-switch"></span>
+          <span class="label-text" data-i18n="settings.alwaysOnTop"></span>
         </label>
       </div>
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" id="start-with-windows">
-          <span data-i18n="settings.startWithWindows"></span>
+          <span class="toggle-switch"></span>
+          <span class="label-text" data-i18n="settings.startWithWindows"></span>
         </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 창 설정 섹션 -->
+      <div class="setting-item">
+        <label for="window-size-select" data-i18n="settings.windowSize.label"></label>
+        <select id="window-size-select" class="select-input">
+          <option value="slim" data-i18n="settings.windowSize.slim"></option>
+          <option value="wide" data-i18n="settings.windowSize.wide"></option>
+        </select>
+        <small data-i18n="settings.windowSize.description"></small>
+      </div>
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" id="run-in-background">
+          <span class="toggle-switch"></span>
+          <span class="label-text" data-i18n="settings.runInBackground.label"></span>
+        </label>
+        <small data-i18n="settings.runInBackground.description"></small>
+      </div>
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" id="remember-window-size">
+          <span class="toggle-switch"></span>
+          <span class="label-text" data-i18n="settings.rememberWindowSize"></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" id="remember-last-page">
+          <span class="toggle-switch"></span>
+          <span class="label-text" data-i18n="settings.rememberLastPage.label"></span>
+        </label>
+        <small data-i18n="settings.rememberLastPage.description"></small>
+      </div>
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" id="show-screenshot-button">
+          <span class="toggle-switch"></span>
+          <span class="label-text">
+            <span data-i18n="settings.screenshotButton.label"></span>
+            <span class="badge-experimental">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span data-i18n="settings.experimental"></span>
+            </span>
+          </span>
+        </label>
+        <small data-i18n="settings.screenshotButton.description"></small>
       </div>
 
       <div class="divider"></div>
@@ -505,10 +644,14 @@
     const alwaysOnTopCheckbox = document.getElementById('always-on-top');
     const startWithWindowsCheckbox = document.getElementById('start-with-windows');
     const languageSelect = document.getElementById('language-select');
+    const windowSizeSelect = document.getElementById('window-size-select');
+    const runInBackgroundCheckbox = document.getElementById('run-in-background');
+    const rememberWindowSizeCheckbox = document.getElementById('remember-window-size');
+    const rememberLastPageCheckbox = document.getElementById('remember-last-page');
+    const showScreenshotButtonCheckbox = document.getElementById('show-screenshot-button');
     const btnSave = document.getElementById('btn-save');
     const btnCancel = document.getElementById('btn-cancel');
     const modalClose = document.getElementById('modal-close');
-    const backdrop = document.getElementById('backdrop');
     const btnClearCache = document.getElementById('btn-clear-cache');
     const btnResetShortcut = document.getElementById('btn-reset-shortcut');
     const btnResetAll = document.getElementById('btn-reset-all');
@@ -538,7 +681,12 @@
       shortcut: 'Shift+Z',
       alwaysOnTop: true,
       startWithWindows: true,
-      language: 'auto'
+      language: 'auto',
+      windowSize: 'slim',
+      runInBackground: true,
+      rememberWindowSize: false,
+      rememberLastPage: false,
+      showScreenshotButton: false
     };
     
     // 원본 설정 저장 (변경 감지용)
@@ -591,13 +739,23 @@
       alwaysOnTopCheckbox.checked = settings.alwaysOnTop;
       startWithWindowsCheckbox.checked = settings.startWithWindows;
       languageSelect.value = settings.language || 'auto';
+      windowSizeSelect.value = settings.windowSize || 'slim';
+      runInBackgroundCheckbox.checked = settings.runInBackground !== false;
+      rememberWindowSizeCheckbox.checked = settings.rememberWindowSize || false;
+      rememberLastPageCheckbox.checked = settings.rememberLastPage || false;
+      showScreenshotButtonCheckbox.checked = settings.showScreenshotButton || false;
       
       // 원본 설정 저장
       originalSettings = {
         shortcut: settings.shortcut,
         alwaysOnTop: settings.alwaysOnTop,
         startWithWindows: settings.startWithWindows,
-        language: settings.language || 'auto'
+        language: settings.language || 'auto',
+        windowSize: settings.windowSize || 'slim',
+        runInBackground: settings.runInBackground !== false,
+        rememberWindowSize: settings.rememberWindowSize || false,
+        rememberLastPage: settings.rememberLastPage || false,
+        showScreenshotButton: settings.showScreenshotButton || false
       };
     }
     
@@ -607,7 +765,12 @@
         shortcut: shortcutInput.value,
         alwaysOnTop: alwaysOnTopCheckbox.checked,
         startWithWindows: startWithWindowsCheckbox.checked,
-        language: languageSelect.value
+        language: languageSelect.value,
+        windowSize: windowSizeSelect.value,
+        runInBackground: runInBackgroundCheckbox.checked,
+        rememberWindowSize: rememberWindowSizeCheckbox.checked,
+        rememberLastPage: rememberLastPageCheckbox.checked,
+        showScreenshotButton: showScreenshotButtonCheckbox.checked
       };
     }
     
@@ -617,7 +780,12 @@
       return current.shortcut !== originalSettings.shortcut ||
              current.alwaysOnTop !== originalSettings.alwaysOnTop ||
              current.startWithWindows !== originalSettings.startWithWindows ||
-             current.language !== originalSettings.language;
+             current.language !== originalSettings.language ||
+             current.windowSize !== originalSettings.windowSize ||
+             current.runInBackground !== originalSettings.runInBackground ||
+             current.rememberWindowSize !== originalSettings.rememberWindowSize ||
+             current.rememberLastPage !== originalSettings.rememberLastPage ||
+             current.showScreenshotButton !== originalSettings.showScreenshotButton;
     }
     
     // 닫기 시도
@@ -833,7 +1001,6 @@
     btnSave.addEventListener('click', saveSettings);
     btnCancel.addEventListener('click', tryCloseModal);
     modalClose.addEventListener('click', tryCloseModal);
-    backdrop.addEventListener('click', tryCloseModal);
     
     // 단축키 기본값 초기화
     btnResetShortcut.addEventListener('click', (e) => {

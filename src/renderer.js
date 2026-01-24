@@ -5,6 +5,7 @@ const titlebar = document.getElementById('titlebar');
 const btnBack = document.getElementById('btn-back');
 const btnForward = document.getElementById('btn-forward');
 const btnRefresh = document.getElementById('btn-refresh');
+const btnScreenshot = document.getElementById('btn-screenshot');
 const btnModeToggle = document.getElementById('btn-mode-toggle');
 const iconGemini = document.getElementById('icon-gemini');
 const iconAistudio = document.getElementById('icon-aistudio');
@@ -46,6 +47,16 @@ async function init() {
   const settings = await window.electronAPI.getSettings();
   currentMode = settings.lastMode;
   updateModeIcons();
+  
+  // 스크린샷 버튼 표시 설정
+  updateScreenshotButtonVisibility(settings.showScreenshotButton);
+}
+
+// 스크린샷 버튼 표시/숨김
+function updateScreenshotButtonVisibility(show) {
+  if (btnScreenshot) {
+    btnScreenshot.style.display = show ? 'flex' : 'none';
+  }
 }
 
 // Update mode icons
@@ -73,6 +84,7 @@ btnModeToggle.addEventListener('click', () => {
   window.electronAPI.switchMode(newMode);
 });
 
+btnScreenshot.addEventListener('click', () => window.electronAPI.startScreenshotMode());
 btnSettings.addEventListener('click', () => window.electronAPI.openSettings());
 
 btnMinimize.addEventListener('click', () => window.electronAPI.minimizeWindow());
@@ -96,6 +108,20 @@ window.electronAPI.onThemeChanged((theme) => {
 window.electronAPI.onModeSwitched((mode) => {
   currentMode = mode;
   updateModeIcons();
+});
+
+// 스크린샷 모드 상태 변경
+window.electronAPI.onScreenshotModeChanged((isActive) => {
+  if (isActive) {
+    btnScreenshot.classList.add('screenshot-active');
+  } else {
+    btnScreenshot.classList.remove('screenshot-active');
+  }
+});
+
+// 스크린샷 버튼 표시 상태 변경
+window.electronAPI.onScreenshotButtonVisibilityChanged((show) => {
+  updateScreenshotButtonVisibility(show);
 });
 
 // Initialize
