@@ -37,11 +37,6 @@ Keep the window pinned for flexible multitasking.
 - 🌙 **Background Mode**  
 Call anytime to continue your work.
 
-## 📥 Installation
-
-➡️ **[Download Latest Release](https://github.com/Hongjinha00/Gemini-App/releases)**
-
-<br><br>
 
 ## 🛠️ Development
 

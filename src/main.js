@@ -395,6 +395,8 @@ body.fade-out .loading-content {
       windowState.width = bounds.width;
       windowState.height = bounds.height;
     }
+    // Gemini 레이아웃 모드 업데이트
+    updateGeminiLayoutMode();
   });
 
   mainWindow.on('move', () => {
