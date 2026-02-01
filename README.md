@@ -16,7 +16,7 @@
 
 <br>
 
-[Download](#installation) • [Features](#features) • [Usage](#usage) • [Contributing](#contributing)
+[Features](#features) • [Usage](#usage) • [Contributing](#contributing)
 
 </div>
 
