@@ -59,11 +59,25 @@ npm run build:mac      # macOS
 
 [MIT](LICENSE) © 2026
 
+<br>
+
+---
+
+<br><br>
+
+> At first glance, it might seem like I created this just to ride the AI hype or make a quick buck. However, this is a project I built for my own actual use, and I decided to share it in hopes that others might find it useful too. I even spent $20 on GitHub Copilot to develop this.
+>
+>Please feel free to use it, and if you have any feature requests or find any bugs, don't hesitate to report them in the Issues tab.
+
+<br><br>
+
 ---
 
 <div align="center">
 
 **[한국어](README.ko.md)**
+
+
 
 
 </div>
