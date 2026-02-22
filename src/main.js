@@ -72,12 +72,16 @@ const store = new Store({
     language: 'auto', // 기본값: 시스템 언어
     // 새 설정들
     runInBackground: true, // 닫기 시 백그라운드 실행
-    windowSize: 'slim', // slim(442x589) 또는 wide(900x625)
+    windowSize: 'slim', // slim(385x610) 또는 wide(900x625)
     rememberWindowSize: false, // 마지막 창 크기 기억
     rememberLastPage: false, // 마지막 페이지 URL 기억
     savedWindowSize: null, // 저장된 창 크기
     lastGeminiUrl: null, // 마지막 Gemini URL
     lastAIStudioUrl: null, // 마지막 AI Studio URL
+    // 1.2 새 기능들
+    customCSS: '', // 커스텀 CSS
+    zoomLevel: 90, // 줌 레벨 (퍼센트)
+    developerMode: false, // 개발자 모드
   }
 });
 
@@ -93,7 +97,7 @@ let isScreenshotMode = false;
 
 // 기본 창 설정 (프리셋)
 const WINDOW_PRESETS = {
-  slim: { width: 442, height: 589 },
+  slim: { width: 385, height: 610 },
   wide: { width: 900, height: 625 }
 };
 const TITLEBAR_HEIGHT = 32;
@@ -200,6 +204,10 @@ function createWindow() {
     }
   });
   mainWindow.contentView.addChildView(titlebarView);
+  // 작업 관리자에서 프로세스 이름 구분을 위한 title 설정
+  titlebarView.webContents.on('did-finish-load', () => {
+    titlebarView.webContents.executeJavaScript(`document.title = 'Gemini App - Titlebar'`);
+  });
 
   // 콘텐츠 WebContentsView 생성 (Gemini/AI Studio용)
   contentView = new WebContentsView({
@@ -218,6 +226,10 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true
     }
+  });
+  // 로딩 화면 title 설정
+  loadingView.webContents.on('did-finish-load', () => {
+    loadingView.webContents.executeJavaScript(`document.title = 'Gemini App - Loading'`);
   });
 
   // titlebarView를 mainWindow.webContents처럼 사용하기 위해 참조 저장
@@ -332,6 +344,7 @@ body.fade-out .loading-content {
     const settingsHeight = isLargeWindow ? 600 : 500;
     
     settingsWindow = new BrowserWindow({
+      title: 'Gemini App - Settings', // 작업 관리자에서 구분용
       width: settingsWidth,
       height: settingsHeight,
       minWidth: 360,
@@ -395,8 +408,6 @@ body.fade-out .loading-content {
       windowState.width = bounds.width;
       windowState.height = bounds.height;
     }
-    // Gemini 레이아웃 모드 업데이트
-    updateGeminiLayoutMode();
   });
 
   mainWindow.on('move', () => {
@@ -464,6 +475,18 @@ body.fade-out .loading-content {
     mainWindow.titlebarView.webContents.send('content-loaded');
     sendNavState();
     detectTheme();
+    
+    // 페이지 로드 후 커스텀 CSS 및 줌 레벨 적용
+    applyCustomCSS();
+    applyZoomLevel(store.get('zoomLevel', 100));
+  });
+  
+  // F12 개발자 도구 (개발자 모드 설정에 따라)
+  contentView.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' && store.get('developerMode')) {
+      contentView.webContents.toggleDevTools();
+      event.preventDefault();
+    }
   });
 }
 
@@ -474,6 +497,57 @@ function sendNavState() {
       canGoForward: contentView.webContents.navigationHistory.canGoForward()
     });
   }
+}
+
+// 커스텀 CSS 적용
+function applyCustomCSS() {
+  if (!contentView) return;
+  
+  const customCSS = store.get('customCSS', '');
+  
+  contentView.webContents.executeJavaScript(`
+    (function() {
+      // 기존 커스텀 CSS 제거
+      const existing = document.getElementById('gemini-app-custom-css');
+      if (existing) existing.remove();
+      
+      // 새 CSS 적용
+      const css = ${JSON.stringify(customCSS)};
+      if (css && css.trim()) {
+        const style = document.createElement('style');
+        style.id = 'gemini-app-custom-css';
+        style.textContent = css;
+        document.head.appendChild(style);
+      }
+    })();
+  `).catch(err => console.error('Custom CSS apply error:', err));
+}
+
+// 줌 레벨 적용
+function applyZoomLevel(level) {
+  if (!contentView) return;
+  
+  const zoomFactor = level / 100;
+  contentView.webContents.setZoomFactor(zoomFactor);
+}
+
+// 창 크기를 기본값으로 리셋 (위치는 유지)
+function resetWindowToDefault() {
+  if (!mainWindow) return;
+  
+  const preset = store.get('windowSize') || 'slim';
+  const size = WINDOW_PRESETS[preset] || WINDOW_PRESETS.slim;
+  const currentBounds = mainWindow.getBounds();
+  
+  mainWindow.setSize(size.width, size.height);
+  
+  // 창 상태도 업데이트 (위치는 현재 위치 유지)
+  windowState = {
+    width: size.width,
+    height: size.height,
+    x: currentBounds.x,
+    y: currentBounds.y
+  };
 }
 
 function detectTheme() {
@@ -566,7 +640,11 @@ function registerShortcut() {
 }
 
 function setAutoLaunch(enable) {
-  app.setLoginItemSettings({ openAtLogin: enable, path: app.getPath('exe') });
+  app.setLoginItemSettings({ 
+    openAtLogin: enable, 
+    path: app.getPath('exe'),
+    args: ['--hidden'] // 시작 시 숨김 모드로 실행
+  });
 }
 
 // IPC 핸들러
@@ -580,8 +658,67 @@ ipcMain.handle('get-settings', () => ({
   runInBackground: store.get('runInBackground'),
   rememberWindowSize: store.get('rememberWindowSize'),
   rememberLastPage: store.get('rememberLastPage'),
-  showScreenshotButton: store.get('showScreenshotButton', false)
+  showScreenshotButton: store.get('showScreenshotButton', false),
+  // 1.2 새 설정들
+  customCSS: store.get('customCSS', ''),
+  zoomLevel: store.get('zoomLevel', 100),
+  developerMode: store.get('developerMode', false)
 }));
+
+// 업데이트 체크 (GitHub Releases API)
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    const { net } = require('electron');
+    const currentVersion = app.getVersion();
+    
+    return new Promise((resolve) => {
+      const request = net.request('https://api.github.com/repos/Hongjinha00/Gemini-App/releases/latest');
+      request.setHeader('User-Agent', 'Gemini-App');
+      
+      let body = '';
+      request.on('response', (response) => {
+        response.on('data', (chunk) => { body += chunk.toString(); });
+        response.on('end', () => {
+          try {
+            const release = JSON.parse(body);
+            const latestVersion = (release.tag_name || '').replace(/^v/, '');
+            if (!latestVersion) {
+              resolve({ hasUpdate: false, currentVersion });
+              return;
+            }
+            const hasUpdate = compareVersions(latestVersion, currentVersion) > 0;
+            resolve({
+              hasUpdate,
+              currentVersion,
+              latestVersion,
+              releaseUrl: release.html_url || 'https://github.com/Hongjinha00/Gemini-App/releases'
+            });
+          } catch {
+            resolve({ hasUpdate: false, currentVersion });
+          }
+        });
+      });
+      request.on('error', () => {
+        resolve({ hasUpdate: false, currentVersion });
+      });
+      request.end();
+    });
+  } catch {
+    return { hasUpdate: false, currentVersion: app.getVersion() };
+  }
+});
+
+// 시맨틱 버전 비교: a > b 이면 양수
+function compareVersions(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na !== nb) return na - nb;
+  }
+  return 0;
+}
 
 ipcMain.handle('get-translations', () => {
   return { translations, lang: getAppLanguage() };
@@ -640,12 +777,67 @@ ipcMain.handle('save-settings', (event, settings) => {
     }
   }
   
+  // 1.2 새 설정들
+  if (settings.customCSS !== undefined) {
+    store.set('customCSS', settings.customCSS);
+    // 커스텀 CSS 적용
+    applyCustomCSS();
+  }
+  if (settings.zoomLevel !== undefined) {
+    store.set('zoomLevel', settings.zoomLevel);
+    // 줌 레벨 적용
+    applyZoomLevel(settings.zoomLevel);
+  }
+  if (settings.developerMode !== undefined) {
+    store.set('developerMode', settings.developerMode);
+  }
+  
   // 언어 변경 시 페이지 새로고침
   if (languageChanged && contentView) {
     contentView.webContents.loadURL(getURL(currentMode));
   }
   
   return languageChanged;
+});
+
+// 줌 레벨 조절 (Ctrl+휠)
+ipcMain.on('zoom-change', (event, direction) => {
+  const currentZoom = store.get('zoomLevel', 100);
+  let newZoom;
+  
+  if (direction === 'in') {
+    newZoom = Math.min(200, currentZoom + 10);
+  } else if (direction === 'out') {
+    newZoom = Math.max(50, currentZoom - 10);
+  } else if (direction === 'reset') {
+    newZoom = 90;
+  } else {
+    return;
+  }
+  
+  store.set('zoomLevel', newZoom);
+  applyZoomLevel(newZoom);
+  
+  // contentView에 줌 레벨 표시
+  if (contentView) {
+    contentView.webContents.send('zoom-level-updated', newZoom);
+  }
+  
+  // 설정 창이 열려있으면 업데이트
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.webContents.send('zoom-level-changed', newZoom);
+  }
+});
+
+// 기본 창 크기로 되돌리기
+ipcMain.handle('reset-window-size', () => {
+  resetWindowToDefault();
+  return true;
+});
+
+// 현재 줌 레벨 가져오기
+ipcMain.handle('get-zoom-level', () => {
+  return store.get('zoomLevel', 100);
 });
 
 ipcMain.handle('open-external', async (event, url) => {
@@ -996,6 +1188,14 @@ app.whenReady().then(() => {
   createTray();
   registerShortcut();
   setAutoLaunch(store.get('startWithWindows'));
+  
+  // 명령줄 인자 확인 (--hidden 또는 Windows 자동 시작)
+  const isAutoStart = process.argv.includes('--hidden') || app.getLoginItemSettings().wasOpenedAtLogin;
+  
+  // 자동 시작이 아닌 경우에만 창 표시
+  if (!isAutoStart && mainWindow) {
+    mainWindow.show();
+  }
   
   // 테마 감지 (5초 간격, 창이 보일 때만)
   setInterval(() => {

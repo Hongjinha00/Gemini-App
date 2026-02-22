@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   navRefresh: () => ipcRenderer.send('nav-refresh'),
   switchMode: (mode) => ipcRenderer.send('switch-mode', mode),
   
-  // 설정 모달
+  // 세션 모달
   openSettings: () => ipcRenderer.send('open-settings'),
   closeSettings: () => ipcRenderer.send('close-settings'),
   
@@ -37,11 +37,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximizeWindow: () => ipcRenderer.send('maximize-window'),
   closeWindow: () => ipcRenderer.send('close-window'),
   
+  // 1.2 새 기능들
+  resetWindowSize: () => ipcRenderer.invoke('reset-window-size'),
+  getZoomLevel: () => ipcRenderer.invoke('get-zoom-level'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  
   // 이벤트 리스너
   onOpenSettings: (callback) => ipcRenderer.on('open-settings', callback),
   onNavState: (callback) => ipcRenderer.on('nav-state', (event, state) => callback(state)),
   onContentLoaded: (callback) => ipcRenderer.on('content-loaded', callback),
   onThemeChanged: (callback) => ipcRenderer.on('theme-changed', (event, theme) => callback(theme)),
   onModeSwitched: (callback) => ipcRenderer.on('mode-switched', (event, mode) => callback(mode)),
-  onScreenshotButtonVisibilityChanged: (callback) => ipcRenderer.on('screenshot-button-visibility-changed', (event, show) => callback(show))
+  onScreenshotButtonVisibilityChanged: (callback) => ipcRenderer.on('screenshot-button-visibility-changed', (event, show) => callback(show)),
+  onZoomLevelChanged: (callback) => ipcRenderer.on('zoom-level-changed', (event, level) => callback(level))
 });

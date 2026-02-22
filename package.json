@@ -1,6 +1,6 @@
 {
   "name": "gemini-app",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Gemini 데스크톱 앱 - 단축키로 빠르게 호출",
   "main": "src/main.js",
   "scripts": {

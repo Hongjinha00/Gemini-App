@@ -49,7 +49,7 @@
     "windowSize": {
       "label": "창 크기",
       "description": "시작 시 기본 창 크기",
-      "slim": "슬림 (442×589)",
+      "slim": "슬림 (385×610)",
       "wide": "와이드 (900×625)"
     },
     "runInBackground": {
@@ -66,6 +66,23 @@
       "description": "긴 코드는 제대로 캡처가 불가능할 수 있습니다."
     },
     "experimental": "실험적",
+    "resetWindowSize": {
+      "button": "기본 창 크기로 되돌리기",
+      "description": "현재 창을 기본 크기와 위치로 초기화합니다."
+    },
+    "zoomLevel": {
+      "label": "웹페이지 크기",
+      "description": "웹페이지 표시 크기 (Ctrl+휠 또는 Ctrl+0으로도 조절 가능)",
+      "resetTitle": "기본값으로 초기화 (90%)"
+    },
+    "customCSS": {
+      "label": "커스텀 CSS",
+      "description": "웹페이지에 적용할 사용자 정의 CSS 스타일"
+    },
+    "developerMode": {
+      "label": "개발자 모드",
+      "description": "F12 키를 눌러 개발자 도구를 열 수 있습니다."
+    },
     "appData": {
       "label": "앱 데이터 관리",
       "clearCache": "캐시 초기화",
@@ -77,7 +94,9 @@
     },
     "about": {
       "version": "버전",
-      "reportBug": "버그 리포트"
+      "reportBug": "버그 리포트",
+      "updateAvailable": "v{version} 업데이트",
+      "upToDate": "최신 버전"
     },
     "buttons": {
       "cancel": "취소",

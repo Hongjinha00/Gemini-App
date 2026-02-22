@@ -49,7 +49,7 @@
     "windowSize": {
       "label": "Window Size",
       "description": "Default window size on startup",
-      "slim": "Slim (442×589)",
+      "slim": "Slim (385×610)",
       "wide": "Wide (900×625)"
     },
     "runInBackground": {
@@ -66,6 +66,23 @@
       "description": "Long code blocks may not capture properly."
     },
     "experimental": "Experimental",
+    "resetWindowSize": {
+      "button": "Reset to default window size",
+      "description": "Reset current window to default size and position."
+    },
+    "zoomLevel": {
+      "label": "Page Zoom",
+      "description": "Web page display size (also adjustable with Ctrl+Wheel or Ctrl+0)",
+      "resetTitle": "Reset to default (90%)"
+    },
+    "customCSS": {
+      "label": "Custom CSS",
+      "description": "Custom CSS styles to apply to the web page"
+    },
+    "developerMode": {
+      "label": "Developer Mode",
+      "description": "Press F12 to open Developer Tools."
+    },
     "appData": {
       "label": "App Data",
       "clearCache": "Clear Cache",
@@ -77,7 +94,9 @@
     },
     "about": {
       "version": "Version",
-      "reportBug": "Report Bug"
+      "reportBug": "Report Bug",
+      "updateAvailable": "v{version} Update",
+      "upToDate": "Up to date"
     },
     "buttons": {
       "cancel": "Cancel",
