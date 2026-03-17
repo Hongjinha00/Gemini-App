@@ -1,3 +1,10 @@
+> [!NOTE]
+> Gemini has progressively implemented stricter countermeasures against subscription caching, ultimately reinforcing these restrictions with the release of the 3.1 Pro update. It appears that due to this update, Electron is no longer recognized as a valid access method.
+>
+> My goal was to complete this application utilizing my existing knowledge base. However, since the Electron approach is no longer viable, I do not possess the technical means to rebuild the application while maintaining its core functionality.
+>
+> If anyone is aware of a solution, please let me know.
+
 <div align="center">
 
 # <img src="gemini.png" width="30" height="auto"/> Gemini App
